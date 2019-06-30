@@ -36,7 +36,12 @@ class ValidRecaptcha implements Rule
                 'response' => $value
             ]
         ]);
-        return json_decode($response->getBody())->success;
+        if( config('faucet.recaptchaEnable') )
+        {
+            return json_decode($response->getBody())->success;
+        } else {
+            return true;
+        }
     }
 
     /**

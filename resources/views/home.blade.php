@@ -124,7 +124,9 @@
                             </div>
                           </div>
                           <div class="form-group">
-                            <div class="g-recaptcha flex-center" data-sitekey="{{ config('faucet.recaptchaSiteKey') }}"></div>
+                            @if(config('faucet.recaptchaEnable'))
+                                <div class="g-recaptcha flex-center" data-sitekey="{{ config('faucet.recaptchaSiteKey') }}"></div>
+                            @endif
                             <button name="submit" type="submit" class="btn btn-primary">Ask</button>
                           </div>
                           @csrf

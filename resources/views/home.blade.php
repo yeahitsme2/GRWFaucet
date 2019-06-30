@@ -68,6 +68,9 @@
                 Faucet balance: <br /><strong>{{ $faucetBalance }} {{ config('faucet.ticker') }}</strong>
             </div>
             <div class="col-md-8">
+                <div class="mb-5">
+                    Send some {{ config('faucet.ticker') }} here: <span class="font-weight-bold">{{ config('faucet.faucetAddress') }}</span> to keep this faucet running.
+                </div>
                 @if (session()->has('success'))
                     <div class="alert alert-success">
                         @if(is_array(session()->get('success')))

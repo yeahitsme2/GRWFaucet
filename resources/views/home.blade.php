@@ -65,7 +65,11 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="title m-b-md">
-                Faucet balance: <br /><strong>{{ $faucetBalance }} {{ config('faucet.ticker') }}</strong>
+                @if( !is_null( $faucetBalance ) )
+                    Faucet balance: <br /><strong>{{ $faucetBalance }} {{ config('faucet.ticker') }}</strong>
+                @else
+                    No connection to the {{ config('faucet.coinName') }} network.
+                @endif
             </div>
             <div class="col-md-8">
                 <div class="mb-5">

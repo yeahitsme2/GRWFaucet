@@ -32,16 +32,21 @@ class AddressController extends Controller
 
         $address = Address::FirstOrNew(['address' => $request->grwaddress]);
 
-        if( is_null(bitcoind()->sendtoaddress( $request->grwaddress, $amount )['error']) )
+        try
         {
-            $address->count += 1;
-            $address->amount += $amount;
-            $address->ip = $request->ip();
-            $address->save();
-            return back()->with('success', 'Sent '.$amount.' ' . config('faucet.ticker') . ' to <strong>'. $request->grwaddress .'</strong>' );
-        } else {
+            if(is_null( bitcoind()->sendtoaddress( $request->grwaddress, $amount )['error'] ))
+            {
+                $address->count += 1;
+                $address->amount += $amount;
+                $address->ip = $request->ip();
+                $address->save();
+                
+                return back()->with('success', 'Sent '.$amount.' ' . config('faucet.ticker') . ' to <strong>'. $request->grwaddress .'</strong>' );
+            }
+
+        } catch( \Exception $e )
+        {
             return back()->with('error', 'Something went wrong, please try again in a few minutes.');
         }
-
     }
 }

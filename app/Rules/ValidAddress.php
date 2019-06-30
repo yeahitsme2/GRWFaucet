@@ -6,6 +6,15 @@ use Illuminate\Contracts\Validation\Rule;
 
 class ValidAddress implements Rule
 {
+
+    /**
+     * Holds the error message depening on context.
+     * Initialized with default message.
+     *
+     * @var string
+     */
+    protected $message = 'The address is not valid.';
+
     /**
      * Create a new rule instance.
      *
@@ -25,8 +34,17 @@ class ValidAddress implements Rule
      */
     public function passes($attribute, $value)
     {
-        $result = bitcoind()->validateaddress($value)->get();
-        return $result['isvalid'];
+        try {
+            $result = bitcoind()->validateaddress($value)->get();
+            return $result['isvalid'];
+
+        } catch( \Exception $e )
+        {
+            // set message for this context
+            $this->message = 'Cannot verify address.';
+            return false;
+        }
+
     }
 
     /**
@@ -36,6 +54,6 @@ class ValidAddress implements Rule
      */
     public function message()
     {
-        return 'The address is not valid.';
+        return $this->message;
     }
 }

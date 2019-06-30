@@ -24,7 +24,13 @@ class HomeController extends Controller
      */
     public function index()
     {
-        $balance = bitcoind()->getBalance()->get();
+        try
+        {
+            $balance = bitcoind()->getBalance()->get();
+        } catch( \Exception $e )
+        {
+            $balance = null;
+        }
         return view('home', [ 'faucetBalance' => $balance ] );
     }
 }

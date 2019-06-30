@@ -7,12 +7,35 @@ use App\Rules\CoolDown;
 use App\Rules\ValidAddress;
 use App\Rules\ValidRecaptcha;
 use Illuminate\Http\Request;
+use Illuminate\Cache\RateLimiter;
 
 class AddressController extends Controller
 {
-    public function ask(Request $request)
+    public function ask(Request $request, RateLimiter $limiter)
     {
+        // Throttle requests to prevent abuse
+        // Throttling by IP and Address submitted
+        $keyIP = $request->ip() . ':ask_submitted';
+        $keyAddress = $request->input('grwaddress') . ':ask_submitted';
 
+
+        if ( $limiter->tooManyAttempts($keyIP, 1) ) {
+            $availableAt = now()->addSeconds($limiter->availableIn($keyIP))->ago();
+
+            return back()->with('error', 'Try again '. $availableAt);
+        }
+        if ( $limiter->tooManyAttempts($keyAddress, 1) ) {
+            $availableAt = now()->addSeconds($limiter->availableIn($keyAddress))->ago();
+
+            return back()->with('error', 'Try again '. $availableAt);
+        }
+
+        // Add a hit to throttle 20 seconds
+        $limiter->hit($keyIP, 20);
+        $limiter->hit($keyAddress, 20);
+
+
+        // Validate data
         $validatedData = $request->validate([
             'grwaddress' => ['required', new ValidAddress, new CoolDown],
             'g-recaptcha-response' => [new ValidRecaptcha]
@@ -28,10 +51,15 @@ class AddressController extends Controller
             }
         }
 
+        // Select random amount to send
         $amount = (rand(config('faucet.minReward'), config('faucet.maxReward'))) / pow(10, config('faucet.coinDecimals'));
 
+
+        // Retrieve model
         $address = Address::FirstOrNew(['address' => $request->grwaddress]);
 
+
+        // Execute
         try
         {
             if(is_null( bitcoind()->sendtoaddress( $request->grwaddress, $amount )['error'] ))
@@ -40,7 +68,7 @@ class AddressController extends Controller
                 $address->amount += $amount;
                 $address->ip = $request->ip();
                 $address->save();
-                
+
                 return back()->with('success', 'Sent '.$amount.' ' . config('faucet.ticker') . ' to <strong>'. $request->grwaddress .'</strong>' );
             }
 
